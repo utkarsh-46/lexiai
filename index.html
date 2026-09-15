@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lexi — Voice Vocabulary Coach</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#f7f7fb;color:#17171c}
+  .app{max-width:980px;margin:auto;min-height:100vh;padding:28px 20px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .brand{font-weight:800;font-size:25px;letter-spacing:-.6px}.brand span{color:#6c5ce7}
+  .pill{background:#fff;border:1px solid #e7e5ee;border-radius:999px;padding:8px 13px;font-size:13px;color:#666}
+  .grid{display:grid;grid-template-columns:1.35fr .8fr;gap:18px}
+  .card{background:#fff;border:1px solid #e9e7ef;border-radius:20px;box-shadow:0 8px 30px rgba(25,20,50,.05)}
+  .hero{padding:30px;min-height:600px;display:flex;flex-direction:column}
+  h1{font-size:38px;line-height:1.05;margin:0 0 10px;letter-spacing:-1.3px}.sub{color:#6b6974;margin:0 0 24px}
+  .word{border-radius:18px;background:#f2efff;padding:25px;margin-bottom:18px}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:#756ca4;font-weight:700}
+  .term{font-size:44px;font-weight:800;margin:4px 0}.meaning{font-size:17px;color:#4d4a58}
+  .example{margin-top:14px;padding-top:14px;border-top:1px solid #ddd8f4;color:#5c5868;font-style:italic}
+  .controls{display:flex;gap:10px;align-items:center;margin-top:auto}
+  button{border:0;border-radius:13px;padding:13px 17px;font-weight:700;cursor:pointer;font-size:14px}
+  .primary{background:#6c5ce7;color:white;min-width:150px}.secondary{background:#f0eef5;color:#292632}
+  .mic{width:56px;height:56px;border-radius:50%;font-size:23px;background:#17171c;color:#fff;padding:0}
+  .mic.listening{background:#e45757;box-shadow:0 0 0 8px #f9dddd}
+  .status{font-size:12px;color:#777;margin-left:4px}
+  .side{padding:22px}.side h3{margin:0 0 15px;font-size:16px}
+  .stat{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee}.stat b{font-size:18px}
+  .progress{height:8px;background:#eceaf1;border-radius:99px;overflow:hidden;margin:9px 0 20px}.bar{height:100%;width:40%;background:#6c5ce7;border-radius:99px}
+  .chat{height:275px;overflow:auto;margin-top:12px;padding-right:3px}
+  .msg{padding:10px 12px;border-radius:13px;margin:7px 0;font-size:13px;line-height:1.4;max-width:92%}
+  .agent{background:#f2f0f7}.user{background:#6c5ce7;color:#fff;margin-left:auto}
+  .tip{background:#fff8df;border:1px solid #f1e5ad;padding:12px;border-radius:13px;font-size:12px;color:#675a29;margin-top:18px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#17171c;color:#fff;padding:11px 15px;border-radius:12px;display:none;font-size:13px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}.hero{min-height:620px}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand">Lexi<span>•</span></div><div class="pill">Voice Vocabulary Coach · Prototype</div></header>
+<div class="grid">
+<section class="card hero">
+  <h1>Learn a word.<br>Say it. Use it.</h1>
+  <p class="sub">A voice-first vocabulary coach that teaches one useful word at a time through conversation.</p>
+  <div class="word">
+    <div class="label">Today's word</div>
+    <div class="term" id="term">Pragmatic</div>
+    <div class="meaning" id="meaning">focused on practical results rather than theory</div>
+    <div class="example" id="example">“We took a pragmatic approach and launched with the simplest version.”</div>
+  </div>
+  <div class="chat" id="chat">
+    <div class="msg agent">Hi! I’m Lexi. I’ll teach you a word, then quiz you. Tap the mic and tell me what <b>pragmatic</b> means.</div>
+  </div>
+  <div class="controls">
+    <button class="mic" id="mic" title="Speak">🎙</button>
+    <button class="primary" id="speak">🔊 Hear the word</button>
+    <button class="secondary" id="next">Next word</button>
+    <span class="status" id="status">Mic ready</span>
+  </div>
+</section>
+<aside class="card side">
+  <h3>Today’s progress</h3>
+  <div class="stat"><span>Words learned</span><b id="learned">4</b></div>
+  <div class="stat"><span>Current streak</span><b>3 days 🔥</b></div>
+  <div class="stat"><span>Accuracy</span><b id="accuracy">80%</b></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <h3>How it works</h3>
+  <div class="stat"><span>1. Listen</span><span>🔊</span></div>
+  <div class="stat"><span>2. Speak</span><span>🎙</span></div>
+  <div class="stat"><span>3. Get feedback</span><span>✨</span></div>
+  <div class="tip"><b>Try saying:</b><br>“Pragmatic means choosing a practical solution that works in real life.”</div>
+</aside>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const words=[
+ {t:"Pragmatic",m:"focused on practical results rather than theory",e:"“We took a pragmatic approach and launched with the simplest version.”",keywords:["practical","real","solution","results","work"]},
+ {t:"Ambiguous",m:"open to more than one interpretation; unclear",e:"“The requirement was ambiguous, so I asked for clarification.”",keywords:["unclear","multiple","meaning","interpretation","not clear"]},
+ {t:"Concise",m:"giving a lot of information clearly in few words",e:"“Keep the product update concise and easy to scan.”",keywords:["brief","short","few words","clear"]},
+ {t:"Resilient",m:"able to recover quickly from difficulty or failure",e:"“The team stayed resilient after the launch setback.”",keywords:["recover","bounce","failure","difficult","strong"]},
+ {t:"Nuance",m:"a subtle difference in meaning, tone, or feeling",e:"“Good product decisions require understanding the nuance.”",keywords:["subtle","difference","detail","meaning","tone"]}
+];
+let i=0, learned=4, correct=4, attempts=5;
+const $=id=>document.getElementById(id);
+function render(){
+ const w=words[i]; $("term").textContent=w.t;$("meaning").textContent=w.m;$("example").textContent=w.e;
+ addMsg("agent",`New word: <b>${w.t}</b>. ${w.m}.<br>Now try explaining it in your own words.`);
+}
+function addMsg(type,html){const d=document.createElement("div");d.className="msg "+type;d.innerHTML=html;$("chat").appendChild(d);$("chat").scrollTop=$("chat").scrollHeight}
+function speak(text){if("speechSynthesis" in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.9;u.pitch=1;speechSynthesis.speak(u)}}
+function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>{$("toast").style.display="none"},2200)}
+$("speak").onclick=()=>{speak(words[i].t);toast("Playing pronunciation…")};
+$("next").onclick=()=>{i=(i+1)%words.length;render();};
+$("mic").onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){toast("Voice input needs Chrome/Edge with microphone access.");return}
+ const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=1;
+ $("mic").classList.add("listening");$("status").textContent="Listening…";
+ r.start();
+ r.onresult=e=>{
+   const text=e.results[0][0].transcript;addMsg("user",text);
+   const w=words[i], low=text.toLowerCase();
+   const hit=w.keywords.some(k=>low.includes(k));
+   attempts++; if(hit){correct++;learned=Math.max(learned,i+5);addMsg("agent",`Great job! 🎉 You captured the core idea of <b>${w.t}</b>. Try using it in a sentence next.`);speak("Great job! You got it.");}
+   else {addMsg("agent",`Almost. Think about this: <b>${w.m}</b>. Try again using your own words.`);speak("Almost. Try again using the hint.");}
+   $("learned").textContent=learned;$("accuracy").textContent=Math.round(correct/attempts*100)+"%";$("bar").style.width=Math.min(100,correct/attempts*100)+"%";
+ };
+ r.onerror=()=>{toast("I couldn't hear you. Please try again.");};
+ r.onend=()=>{$("mic").classList.remove("listening");$("status").textContent="Mic ready"};
+};
+</script>
+</body>
+</html>
